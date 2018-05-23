@@ -111,7 +111,6 @@ public class Controller {
 
 
         lista = FXCollections.observableArrayList(lexer.getTokeny());
-        znakColumn.setCellValueFactory(Token -> t);
         //lista.addAll(lexer.getTokeny());
         //listaTokenow.getItems().setAll(lista);
         //listaTokenow.refresh()
