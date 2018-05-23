@@ -35,7 +35,7 @@
    <bottom>
       <TableView fx:id="listaTokenow" prefHeight="105.0" prefWidth="600.0" BorderPane.alignment="CENTER">
         <columns>
-          <TableColumn fx:id="nazwaColumn" prefWidth="75.0" text="Nazwa" />
+          <TableColumn fx:id="nazwaColumn" editable="false" prefWidth="75.0" text="Nazwa" />
           <TableColumn fx:id="wartoscColumn" editable="false" prefWidth="75.0" text="Wartość" />
         </columns>
       </TableView>

@@ -2,6 +2,7 @@ package interpreter;
 
 import javafx.beans.property.ListProperty;
 import javafx.beans.property.SimpleListProperty;
+import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
@@ -19,11 +20,8 @@ public class Controller {
     public Button odczytBtn, zapisBtn, runBtn;
     public TextArea edytorTextArea, konsolaTextArea;
     public BorderPane bp;
-    public TableView listaTokenow;
-    public ListView listaTokenow1;
-    public TableColumn znakColumn, wartoscColumn;
-
-    protected ListProperty<Token> listProperty = new SimpleListProperty<>();
+    public TableView<Token> listaTokenow;
+    public TableColumn nazwaColumn, wartoscColumn;
 
     public ObservableList<Token> lista;
 
@@ -99,31 +97,11 @@ public class Controller {
         }
 
         Lexer lexer = new Lexer(edytorTextArea.getText());
-
-        for(int i=0;i<lexer.getTokeny().size();i++){
-            Token token = lexer.getTokeny().get(i);
-            System.out.println(token.getNazwa() +" "+ token.getWartosc());
-            //listaTokenow.getItems().add(token);
-        }
-
-        //TableColumn typ = new TableColumn("Typ");
-        //TableColumn wartosc = new TableColumn("Wartość");
-
-
         lista = FXCollections.observableArrayList(lexer.getTokeny());
-        //lista.addAll(lexer.getTokeny());
-        //listaTokenow.getItems().setAll(lista);
-        //listaTokenow.refresh()
+        nazwaColumn.setCellValueFactory(new PropertyValueFactory<Token,String>("Nazwa"));
+        wartoscColumn.setCellValueFactory(new PropertyValueFactory<Token,String>("Wartosc"));
+
         listaTokenow.setItems(lista);
-
-
-
-
-
-
-
-
-
     }
 
     private void otworzPlik(){
