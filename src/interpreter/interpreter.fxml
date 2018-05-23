@@ -40,7 +40,4 @@
         </columns>
       </TableView>
    </bottom>
-   <top>
-      <ListView fx:id="listaTokenow1" prefHeight="68.0" prefWidth="600.0" BorderPane.alignment="CENTER" />
-   </top>
 </BorderPane>
