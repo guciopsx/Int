@@ -8,7 +8,7 @@
 <?import javafx.scene.layout.VBox?>
 <?import javafx.scene.text.Font?>
 
-<BorderPane fx:id="bp" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="700.0" prefWidth="700.0" xmlns="http://javafx.com/javafx/10.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="interpreter.Controller">
+<BorderPane fx:id="bp" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="700.0" prefWidth="700.0" xmlns="http://javafx.com/javafx/8.0.121" xmlns:fx="http://javafx.com/fxml/1" fx:controller="interpreter.Controller">
    <right>
       <VBox prefHeight="400.0" prefWidth="108.0" BorderPane.alignment="CENTER">
          <children>
@@ -17,6 +17,7 @@
             <Button fx:id="edytorClearBtn" mnemonicParsing="false" onAction="#edytorClearBtnHnd" text="Wyczyść edytor" />
             <Button fx:id="konsolaClearBtn" mnemonicParsing="false" onAction="#konsolaClearBtnHnd" text="Wyczyść konsolę" />
             <Button fx:id="runBtn" mnemonicParsing="false" onAction="#runBtnHnd" text="RUN" />
+            <Button fx:id="srcBTN" mnemonicParsing="false" onAction="#srcBtnHnd" text="SOURCE CODE" />
          </children>
       </VBox>
    </right>

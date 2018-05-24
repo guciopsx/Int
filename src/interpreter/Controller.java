@@ -17,13 +17,29 @@ import java.util.Optional;
 
 public class Controller {
     @FXML
-    public Button odczytBtn, zapisBtn, runBtn;
+    public Button odczytBtn, zapisBtn, runBtn, srcBtn;
     public TextArea edytorTextArea, konsolaTextArea;
     public BorderPane bp;
     public TableView<Token> listaTokenow;
     public TableColumn nazwaColumn, wartoscColumn;
 
     public ObservableList<Token> lista;
+
+    String source = "10 FOR B=99 TO 1 STEP -1\n" +
+            "20 GOSUB 100\n" +
+            "30 T$=T$+\" OF BEER ON THE WALL\"\n" +
+            "40 PRINT T$;\", \";T$\n" +
+            "50 PRINT \"TAKE ONE DOWN AND PASS IT AROUND, \"\n" +
+            "60 IF B-1<=0 THEN PRINT \"NO MORE BOTTLES OF BEER ON THE WALL\":GOTO 80\n" +
+            "70 GOSUB 200:PRINT \" OF BEER ON THE WALL\"\n" +
+            "80 PRINT:NEXT\n" +
+            "91 PRINT \"GO TO THE STORE AND BUY SOME MORE, 99 BOTTLES OF BEER ON THE WALL\"\n" +
+            "92 END\n" +
+            "100 T$=STR$(B)+\" BOTTLE\":IF B>1 THEN T$=T$+\"S\"\n" +
+            "110 RETURN\n" +
+            "200 A=B-1:PRINT STR$(A)+\" BOTTLE\";\n" +
+            "210 IF A>1 THEN PRINT \"S\";\n" +
+            "220 RETURN";
 
 
 
@@ -90,6 +106,11 @@ public class Controller {
     }
 
     @FXML
+    private void srcBtnHnd(ActionEvent event) {
+        edytorTextArea.appendText(source);
+    }
+
+    @FXML
     private void runBtnHnd(ActionEvent event) {
         //for(int i=0;i<edytorTextArea.getText().length();i++){
             //System.out.println(String.valueOf(edytorTextArea.getText().charAt(b)));
@@ -97,7 +118,7 @@ public class Controller {
         //}
 
         try{
-            Lexer lexer = new Lexer(edytorTextArea.getText());
+            Lexer lexer = new Lexer(edytorTextArea.getText().toUpperCase());
 
             lista = FXCollections.observableArrayList(lexer.getTokeny());
             nazwaColumn.setCellValueFactory(new PropertyValueFactory<Token,String>("Nazwa"));
