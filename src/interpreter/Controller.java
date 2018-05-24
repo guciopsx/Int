@@ -91,17 +91,22 @@ public class Controller {
 
     @FXML
     private void runBtnHnd(ActionEvent event) {
-        for(int i=0;i<edytorTextArea.getText().length();i++){
+        //for(int i=0;i<edytorTextArea.getText().length();i++){
             //System.out.println(String.valueOf(edytorTextArea.getText().charAt(b)));
-            konsolaTextArea.appendText(String.valueOf(edytorTextArea.getText().charAt(i))+"\r\n");
+        //    konsolaTextArea.appendText(String.valueOf(edytorTextArea.getText().charAt(i))+"\r\n");
+        //}
+
+        try{
+            Lexer lexer = new Lexer(edytorTextArea.getText());
+
+            lista = FXCollections.observableArrayList(lexer.getTokeny());
+            nazwaColumn.setCellValueFactory(new PropertyValueFactory<Token,String>("Nazwa"));
+            wartoscColumn.setCellValueFactory(new PropertyValueFactory<Token,String>("Wartosc"));
+
+            listaTokenow.setItems(lista);
+        } catch(NieznanySymbol e){
+            System.out.println("Błąd analizy leksykalnej");
         }
-
-        Lexer lexer = new Lexer(edytorTextArea.getText());
-        lista = FXCollections.observableArrayList(lexer.getTokeny());
-        nazwaColumn.setCellValueFactory(new PropertyValueFactory<Token,String>("Nazwa"));
-        wartoscColumn.setCellValueFactory(new PropertyValueFactory<Token,String>("Wartosc"));
-
-        listaTokenow.setItems(lista);
     }
 
     private void otworzPlik(){
