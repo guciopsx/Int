@@ -1,8 +1,5 @@
 package interpreter;
 
-import javafx.beans.property.ListProperty;
-import javafx.beans.property.SimpleListProperty;
-import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
@@ -40,8 +37,6 @@ public class Controller {
             "200 A=B-1:PRINT STR$(A)+\" BOTTLE\";\n" +
             "210 IF A>1 THEN PRINT \"S\";\n" +
             "220 RETURN";
-
-
 
     @FXML
     private void odczytBtnHnd(ActionEvent event) {
@@ -123,10 +118,12 @@ public class Controller {
             lista = FXCollections.observableArrayList(lexer.getTokeny());
             nazwaColumn.setCellValueFactory(new PropertyValueFactory<Token,String>("Nazwa"));
             wartoscColumn.setCellValueFactory(new PropertyValueFactory<Token,String>("Wartosc"));
-
             listaTokenow.setItems(lista);
+
+            konsolaTextArea.appendText("Wygenerowano żetony: " + lista.size() + "\n");
         } catch(NieznanySymbol e){
             System.out.println("Błąd analizy leksykalnej");
+            konsolaTextArea.appendText("Nierozpoznane znaki w kodzie" + "\n");
         }
     }
 
@@ -145,13 +142,13 @@ public class Controller {
                 String s;
                 while((s=br.readLine())!=null)
                 {
-                    edytorTextArea.appendText(s + "\r\n");
+                    edytorTextArea.appendText(s + "\n");
                 }
                 fr.close();
-                konsolaTextArea.appendText("Otwarto plik" + "\r\n");
+                konsolaTextArea.appendText("Otwarto plik" + "\n");
             } catch (FileNotFoundException ex) {
                 System.err.println(ex);
-                konsolaTextArea.appendText("Błąd otwierania pliku" + "\r\n");
+                konsolaTextArea.appendText("Błąd otwierania pliku" + "\n");
             } catch (IOException ex) {
                 System.err.println(ex);
             }
@@ -169,10 +166,10 @@ public class Controller {
             BufferedWriter bw = new BufferedWriter(fw);
             bw.write(edytorTextArea.getText());
             bw.close();
-            konsolaTextArea.appendText("Zapisano plik" + "\r\n");
+            konsolaTextArea.appendText("Zapisano plik" + "\n");
         }catch (Exception e){//Catch exception if any
             System.err.println("Error: " + e.getMessage());
-            konsolaTextArea.appendText("Błąd zapisywania pliku" + "\r\n");
+            konsolaTextArea.appendText("Błąd zapisywania pliku" + "\n");
         }
     }
 
