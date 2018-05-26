@@ -44,6 +44,7 @@ public class Parser extends Exception{
         int wynik =  wspolczynnik();
 
         while (token.getNazwa().equals("*") || token.getNazwa().equals("/")){
+            Token token = tokens.get(wskaznik);
             if (token.getNazwa().equals("*")){
                 eat("*");
                 wynik = wynik * wyraz();
@@ -71,9 +72,9 @@ public class Parser extends Exception{
 
     int expr(){
         while (!tokens.get(wskaznik).getNazwa().equals("NUMBER"))wskaznik++;
-        token = tokens.get(wskaznik);
         int wynik = wyraz();
         while (token.getNazwa().equals("+") || token.getNazwa().equals("-")){
+            token = tokens.get(wskaznik);
             if (token.getNazwa().equals("+")){
                 eat("+");
                 wynik = wynik + wyraz();
