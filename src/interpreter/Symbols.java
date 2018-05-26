@@ -65,7 +65,7 @@ public final class Symbols {
         put('<',"LESS");
         put('>',"MORE");
         put(';',"SEMICOLON");
-        put(':',"PUNCTUATION");
+        put(':',"COLON");
         put('!',"EXCLAMATION");
     }};
 

@@ -121,6 +121,9 @@ public class Controller {
             listaTokenow.setItems(lista);
 
             konsolaTextArea.appendText("Wygenerowano żetony: " + lista.size() + "\n");
+
+            Parser parser = new Parser(lexer.getTokeny(), this);
+            konsolaTextArea.appendText(String.valueOf(parser.expr())+"\n");
         } catch(NieznanySymbol e){
             System.out.println("Błąd analizy leksykalnej");
             konsolaTextArea.appendText("Nierozpoznane znaki w kodzie" + "\n");

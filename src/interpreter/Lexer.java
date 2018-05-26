@@ -16,16 +16,19 @@ public class Lexer extends Exception{
             }else if(Character.isWhitespace(input.charAt(wskaznik))){
                 wskaznik++;
             }else if(input.charAt(wskaznik)=='+' || input.charAt(wskaznik)=='-' || input.charAt(wskaznik)=='*' || input.charAt(wskaznik)=='/'){
-                //tokeny.add(new Token("OPERATOR", String.valueOf(input.charAt(wskaznik))));
-                tokeny.add(new Token(symbols.operators(input.charAt(wskaznik)), String.valueOf(input.charAt(wskaznik))));
+                tokeny.add(new Token(String.valueOf(input.charAt(wskaznik)),null));
+                //tokeny.add(new Token(symbols.operators(input.charAt(wskaznik)), String.valueOf(input.charAt(wskaznik))));
                 wskaznik++;
             }else if(Character.isDigit(input.charAt(wskaznik))){
                 if(wskaznik==0 || input.charAt(wskaznik-1)=='\n') tokeny.add(new Token("LINENUMBER", scanNumber(input)));
                 else tokeny.add(new Token("NUMBER", scanNumber(input)));
             }else if(Character.isAlphabetic(input.charAt(wskaznik))){
                 String symbol = scanSymbol(input);
-                if(symbols.isKeyword(symbol))tokeny.add(new Token("KEYWORD", symbol));
-                else tokeny.add(new Token("TEXT", symbol));
+                if(symbol.equals("REN"))scanComent(input);
+                else{
+                    if(symbols.isKeyword(symbol))tokeny.add(new Token("KEYWORD", symbol));
+                    else tokeny.add(new Token("TEXT", symbol));
+                }
             }else if(input.charAt(wskaznik)=='=' || input.charAt(wskaznik)=='(' || input.charAt(wskaznik)==')' || input.charAt(wskaznik)==';'
                     || input.charAt(wskaznik)=='{' || input.charAt(wskaznik)=='}' || input.charAt(wskaznik)=='$' || input.charAt(wskaznik)=='!'
                     || input.charAt(wskaznik)==':' || input.charAt(wskaznik)=='<'
@@ -72,6 +75,13 @@ public class Lexer extends Exception{
             wskaznik++;
         }
         return text;
+    }
+
+    private void scanComent(String input){
+        while(input.charAt(wskaznik)!='\n'){
+            wskaznik++;
+        }
+        wskaznik++;
     }
 
     public ArrayList<Token> getTokeny() {
