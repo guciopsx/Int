@@ -15,12 +15,14 @@ import java.util.Optional;
 public class Controller {
     @FXML
     public Button odczytBtn, zapisBtn, runBtn, srcBtn;
-    public TextArea edytorTextArea, konsolaTextArea;
+    public TextArea edytorTextArea, konsolaTextArea, varTextArea;
     public BorderPane bp;
     public TableView<Token> listaTokenow;
-    public TableColumn nazwaColumn, wartoscColumn;
+    public TableView varTableView;
+    public TableColumn nazwaColumn, wartoscColumn, zmiennaColumn, wartoscVarColumn;
 
     public ObservableList<Token> lista;
+    public ObservableList varList;
 
     String source = "10 FOR B=99 TO 1 STEP -1\n" +
             "20 GOSUB 100\n" +
@@ -123,10 +125,22 @@ public class Controller {
             konsolaTextArea.appendText("Wygenerowano żetony: " + lista.size() + "\n");
 
             Parser parser = new Parser(lexer.getTokeny(), this);
-            konsolaTextArea.appendText(String.valueOf(parser.expr())+"\n");
+            //konsolaTextArea.appendText(String.valueOf(parser.expr())+"\n");
+            //parser.parse();
+
+            Thread t = new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    parser.parse();
+                }
+            });
+
+            t.start();
         } catch(NieznanySymbol e){
             System.out.println("Błąd analizy leksykalnej");
             konsolaTextArea.appendText("Nierozpoznane znaki w kodzie" + "\n");
+        } catch (Exception e){
+
         }
     }
 
