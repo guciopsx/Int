@@ -128,7 +128,8 @@ public class Controller {
             wartoscColumn.setCellValueFactory(new PropertyValueFactory<Token,String>("Wartosc"));
             listaTokenow.setItems(lista);
 
-            konsolaTextArea.appendText("Wygenerowano żetony: " + lista.size() + "\n");
+            if(konsolaTextArea.getText().isEmpty())konsolaTextArea.appendText("Wygenerowano żetony: " + lista.size() + "\n");
+            else konsolaTextArea.appendText("\nWygenerowano żetony: " + lista.size() + "\n");
 
             Parser parser = new Parser(lexer.getTokeny(), this);
             //konsolaTextArea.appendText(String.valueOf(parser.expr())+"\n");

@@ -64,7 +64,7 @@ public final class Symbols {
         put('{',"LBRAC");
         put(']',"RBRAC");
         put('<',"LESS");
-        put('>',"MORE");
+        put('>',"GREATER");
         put(';',"SEMICOLON");
         put(':',"COLON");
         put('!',"EXCLAMATION");

@@ -33,7 +33,19 @@ public class Lexer extends Exception{
                     || input.charAt(wskaznik)=='{' || input.charAt(wskaznik)=='}' || input.charAt(wskaznik)=='$' || input.charAt(wskaznik)=='!'
                     || input.charAt(wskaznik)==':' || input.charAt(wskaznik)=='<'
                     || input.charAt(wskaznik)=='>' || input.charAt(wskaznik)==','){
-                tokeny.add(new Token(symbols.special(input.charAt(wskaznik)), String.valueOf(input.charAt(wskaznik))));
+                if(wskaznik+1<input.length() && input.charAt(wskaznik)=='>' && input.charAt(wskaznik+1)=='='){
+                    tokeny.add(new Token("GE", ">="));
+                    wskaznik++;
+                }
+                else if(wskaznik+1<input.length() && input.charAt(wskaznik)=='<' && input.charAt(wskaznik+1)=='='){
+                    tokeny.add(new Token("LE", "<="));
+                    wskaznik++;
+                }
+                else if(wskaznik+1<input.length() && input.charAt(wskaznik)=='<' && input.charAt(wskaznik+1)=='>'){
+                    tokeny.add(new Token("NE", "<>"));
+                    wskaznik++;
+                }
+                else tokeny.add(new Token(symbols.special(input.charAt(wskaznik)), String.valueOf(input.charAt(wskaznik))));
                 wskaznik++;
             }else throw new NieznanySymbol("Nieznany symbol");//{
                 //else throw new NieznanySymbol("Nieznany symbol");
