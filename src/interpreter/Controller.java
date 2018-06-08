@@ -135,15 +135,6 @@ public class Controller {
             //konsolaTextArea.appendText(String.valueOf(parser.expr())+"\n");
             //parser.parse();
 
-            //Thread t = new Thread(new Runnable() {
-            //    @Override
-            //    public void run() {
-             //       parser.parse();
-             //   }
-            //});
-
-            //t.start();
-
 
             Service<Void> service = new Service<Void>() {
                 @Override
@@ -152,11 +143,12 @@ public class Controller {
                         @Override
                         protected Void call() throws Exception {
                             parser.parse();
-                            final CountDownLatch latch = new CountDownLatch(1);
+                            final CountDownLatch latch = new CountDownLatch(100);
                             Platform.runLater(new Runnable() {
                                 @Override
                                 public void run() {
                                     try{
+                                        //parser.parse();
 
                                     }finally{
                                         latch.countDown();
@@ -171,6 +163,9 @@ public class Controller {
                 }
             };
             service.start();
+
+
+
             //parser.parse();
         } catch(NieznanySymbol e){
             System.out.println("Błąd analizy leksykalnej");
@@ -179,6 +174,8 @@ public class Controller {
 
         }
     }
+
+
 
     private void otworzPlik(){
         FileChooser fileChooserOtworz = new FileChooser();

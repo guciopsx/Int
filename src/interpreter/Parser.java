@@ -208,6 +208,7 @@ public class Parser extends Exception{
 
     public void parse(){
         Hashtable<Integer, Integer> etykiety = new Hashtable<Integer, Integer>();
+        Hashtable<String, Integer> etykietyFor = new Hashtable<String, Integer>();
         //variables = new ArrayList<Variables>();
         var = new Hashtable<String, Variable>();
         licznik=0;
@@ -220,6 +221,25 @@ public class Parser extends Exception{
             }
             licznik++;
         } licznik=0;
+
+
+        while (licznik<tokens.size()){
+            token=tokens.get(licznik);
+            if(token.getWartosc()!=null && token.getWartosc().equals("FOR")) {
+                licznik++;
+                token=tokens.get(licznik);
+                if(token.getNazwa().equals("TEXT")) {
+                    String symbolFor = token.getWartosc();
+                    while (!token.getNazwa().equals("LINENUMBER")){
+                        licznik++;
+                        token = tokens.get(licznik);
+                    }
+                    etykietyFor.put(symbolFor, Integer.valueOf(token.getWartosc()));
+                }
+            }
+            licznik++;
+        } licznik=0;
+
         while(licznik<tokens.size()){
             token=tokens.get(licznik);
             if(token.getNazwa().equals("LINENUMBER")) {
@@ -494,7 +514,10 @@ public class Parser extends Exception{
                                     printVar();
                                     licznik++;
                                 }
-                            } 
+                            } else if (token.getNazwa().equals("LPARE")){
+                                var.put("IFR", new Variable(evaluateONP(wyrazenie())));
+                                printVar();
+                            }
 
 
 
@@ -566,6 +589,67 @@ public class Parser extends Exception{
                                     printVar();
                                     licznik++;
                                 }
+                            }else if (token.getNazwa().equals("LPARE")){
+                                var.put("IFR", new Variable(evaluateONP(wyrazenie())));
+                                printVar();
+                            }
+                        } else if(token.getNazwa().equals("LPARE")){
+
+                                var.put("IFL", new Variable(evaluateONP(wyrazenie())));
+                                printVar();
+
+                            token = tokens.get(licznik);
+
+
+
+                            if(token.getNazwa().equals("LESS"))expression="<";
+                            else if(token.getNazwa().equals("GREATER"))expression=">";
+                            else if(token.getNazwa().equals("EQUAL"))expression="=";
+                            else if(token.getNazwa().equals("LE"))expression="<=";
+                            else if(token.getNazwa().equals("GE"))expression=">=";
+                            else if(token.getNazwa().equals("NE"))expression="<>";
+
+                            licznik++;
+
+                            token = tokens.get(licznik);
+
+                            if(token.getNazwa().equals("TEXT")) {
+                                licznik++;
+                                token = tokens.get(licznik);
+                                if(token.getNazwa().equals("+") || token.getNazwa().equals("-") || token.getNazwa().equals("*")
+                                        || token.getNazwa().equals("/") || token.getNazwa().equals("^")){
+                                    licznik--;
+                                    token = tokens.get(licznik);
+                                    var.put("IFR", new Variable(evaluateONP(wyrazenie())));
+                                    printVar();
+
+                                } else {
+                                    licznik--;
+                                    token = tokens.get(licznik);
+                                    var.put("IFR", new Variable(var.get(token.getWartosc()).getDoubleValue()));
+                                    printVar();
+
+                                }
+                            } else if(token.getNazwa().equals("NUMBER")){
+                                licznik++;
+                                token = tokens.get(licznik);
+                                if(token.getNazwa().equals("+") || token.getNazwa().equals("-") || token.getNazwa().equals("*")
+                                        || token.getNazwa().equals("/") || token.getNazwa().equals("^")){
+                                    licznik--;
+                                    token = tokens.get(licznik);
+                                    var.put("IFR", new Variable(evaluateONP(wyrazenie())));
+                                    printVar();
+
+                                } else {
+                                    licznik--;
+                                    token = tokens.get(licznik);
+                                    var.put("IFR", new Variable(Double.parseDouble(token.getWartosc())));
+                                    printVar();
+                                    licznik++;
+                                }
+                            }else if (token.getNazwa().equals("LPARE")){
+                                var.put("IFR", new Variable(evaluateONP(wyrazenie())));
+                                printVar();
                             }
                         }
 
@@ -640,7 +724,11 @@ public class Parser extends Exception{
                                             licznik++;
                                             //controller.konsolaTextArea.appendText(token.getWartosc());
                                             //licznik++;
+                                        } else if (token.getNazwa().equals("LPARE")) {
+                                            controller.konsolaTextArea.appendText(String.valueOf(evaluateONP(wyrazenie())));
+                                            licznik++;
                                         }
+
                                         boolean morePrint = true;
                                         while (morePrint){
                                             token = tokens.get(licznik);
@@ -701,6 +789,9 @@ public class Parser extends Exception{
                                                     licznik++;
                                                     //controller.konsolaTextArea.appendText(token.getWartosc());
                                                     //licznik++;
+                                                }else if (token.getNazwa().equals("LPARE")) {
+                                                    controller.konsolaTextArea.appendText("\t" + String.valueOf(evaluateONP(wyrazenie())));
+                                                    licznik++;
                                                 }
                                             }else if(token.getNazwa().equals("SEMICOLON")){
                                                 licznik++;
@@ -760,6 +851,9 @@ public class Parser extends Exception{
                                                     licznik++;
                                                     //controller.konsolaTextArea.appendText(token.getWartosc());
                                                     //licznik++;
+                                                } else if (token.getNazwa().equals("LPARE")) {
+                                                    controller.konsolaTextArea.appendText(String.valueOf(evaluateONP(wyrazenie())));
+                                                    licznik++;
                                                 }
                                             } else morePrint = false;
                                         }
@@ -1005,23 +1099,55 @@ public class Parser extends Exception{
                         if(token.getWartosc().equals("STEP")){
                             licznik++;
                             token = tokens.get(licznik);
-                            var.put(symbolName + "-STEP", new Variable(Double.parseDouble(token.getWartosc())));
+                            if(token.getNazwa().equals("NUMBER")) {
+                                var.put(symbolName + "-STEP", new Variable(Double.parseDouble(token.getWartosc())));
+                                printVar();
+                                licznik++;
+                            } else if (token.getNazwa().equals("LPARE")){
+                                var.put(symbolName + "-STEP", new Variable(evaluateONP(wyrazenie())));
+                                printVar();
+                                licznik++;
+                            }
+                        } else {
+                            var.put(symbolName + "-STEP", new Variable(Double.parseDouble("1.0")));
                             printVar();
-                            licznik++;
                         }
-                        token = tokens.get(licznik);
-                        etykiety.put(Integer.valueOf(token.getWartosc()),licznik);
+
 
                     } else if(token.getWartosc().equals("NEXT")){
                         licznik++;
                         token = tokens.get(licznik);
                         if(token.getNazwa().equals("TEXT")){
-
+                            double to, step, val;
+                            val = var.get(token.getWartosc()).getDoubleValue();
+                            to = var.get(token.getWartosc()+"-TO").getDoubleValue();
+                            step = var.get(token.getWartosc()+"-STEP").getDoubleValue();
+                            if (val < to && step > 0) {
+                                var.put(token.getWartosc(),new Variable(val+step));
+                                printVar();
+                                licznik=etykiety.get(etykietyFor.get(token.getWartosc()));
+                            }else if (val > to && step < 0){
+                                var.put(token.getWartosc(),new Variable(val+step));
+                                printVar();
+                                licznik=etykiety.get(etykietyFor.get(token.getWartosc()));
+                            }
+                            else licznik++;
                         }
 
                     } else if(token.getWartosc().equals("INT")){
                         licznik++;
                         System.out.println(evaluateONP(wyrazenie()));
+                    } else if(token.getWartosc().equals("STOP")) {
+                        controller.konsolaTextArea.setEditable(true);
+                        String oldValue, newValue;
+                        oldValue = controller.konsolaTextArea.getText();
+                        newValue = controller.konsolaTextArea.getText().replace(oldValue, "");
+
+                        while (newValue.equals("") || newValue.charAt(newValue.length() - 1) != '\n') {
+                            newValue = controller.konsolaTextArea.getText().replace(oldValue, "");
+                        }
+                        newValue.replace("\n", "");
+                        controller.konsolaTextArea.setEditable(false);
                     } else if(token.getWartosc().equals("LET")){
                         licznik++;
                         token = tokens.get(licznik);
