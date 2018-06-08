@@ -15,7 +15,7 @@ public class Lexer extends Exception{
                 tokeny.add(new Token("STRING", scanString(input)));
             }else if(Character.isWhitespace(input.charAt(wskaznik))){
                 wskaznik++;
-            }else if(input.charAt(wskaznik)=='+' || input.charAt(wskaznik)=='-' || input.charAt(wskaznik)=='*' || input.charAt(wskaznik)=='/'){
+            }else if(input.charAt(wskaznik)=='+' || input.charAt(wskaznik)=='-' || input.charAt(wskaznik)=='*' || input.charAt(wskaznik)=='/' || input.charAt(wskaznik)=='^'){
                 tokeny.add(new Token(String.valueOf(input.charAt(wskaznik)),null));
                 //tokeny.add(new Token(symbols.operators(input.charAt(wskaznik)), String.valueOf(input.charAt(wskaznik))));
                 wskaznik++;
@@ -32,7 +32,7 @@ public class Lexer extends Exception{
             }else if(input.charAt(wskaznik)=='=' || input.charAt(wskaznik)=='(' || input.charAt(wskaznik)==')' || input.charAt(wskaznik)==';'
                     || input.charAt(wskaznik)=='{' || input.charAt(wskaznik)=='}' || input.charAt(wskaznik)=='$' || input.charAt(wskaznik)=='!'
                     || input.charAt(wskaznik)==':' || input.charAt(wskaznik)=='<'
-                    || input.charAt(wskaznik)=='>'){
+                    || input.charAt(wskaznik)=='>' || input.charAt(wskaznik)==','){
                 tokeny.add(new Token(symbols.special(input.charAt(wskaznik)), String.valueOf(input.charAt(wskaznik))));
                 wskaznik++;
             }else throw new NieznanySymbol("Nieznany symbol");//{
@@ -61,7 +61,7 @@ public class Lexer extends Exception{
                 && input.charAt(wskaznik)!='{' && input.charAt(wskaznik)!='}' && input.charAt(wskaznik)!='$'
                 && input.charAt(wskaznik)!='!' && input.charAt(wskaznik)!='+' && input.charAt(wskaznik)!='-'
                 && input.charAt(wskaznik)!='*' && input.charAt(wskaznik)!='/' && input.charAt(wskaznik)!='<'
-                && input.charAt(wskaznik)!='>' && input.charAt(wskaznik)!=':') {
+                && input.charAt(wskaznik)!='>' && input.charAt(wskaznik)!=':' && input.charAt(wskaznik)!=',' && input.charAt(wskaznik)!='^') {
             text+=input.charAt(wskaznik);
             wskaznik++;
         }

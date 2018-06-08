@@ -53,6 +53,7 @@ public final class Symbols {
         put('-',"MINUS");
         put('/',"DIV");
         put('*',"MUL");
+        put('^',"FAC");
     }};
 
     private final Hashtable<Character, String> special = new Hashtable<Character, String>(){{
@@ -67,6 +68,7 @@ public final class Symbols {
         put(';',"SEMICOLON");
         put(':',"COLON");
         put('!',"EXCLAMATION");
+        put(',',"COMMA");
     }};
 
     public boolean isKeyword(String text){

@@ -2,14 +2,13 @@ package interpreter;
 
 import java.util.ArrayList;
 import java.util.Hashtable;
+import java.util.Stack;
 
 public class Parser extends Exception{
-    private int wskaznik=0;
+    private int licznik=0;
     private Controller controller;
     private ArrayList<Token> tokens;
-    //ArrayList<Variables> variables;
     private Hashtable<String, Variable> var;
-    private Token token;
 
     Parser(ArrayList<Token> tokens, Controller controller){
         this.controller = controller;
@@ -20,89 +19,155 @@ public class Parser extends Exception{
         throw new SyntaxError("Błąd składni");
     }
 
-    void eat(String tokenType){
-        if (tokens.get(wskaznik).getNazwa().equals(tokenType)) {
-            wskaznik++;
-            if (wskaznik!=tokens.size())token = tokens.get(wskaznik);
+    public String wyrazenie(){
+        String onp = "";
+        Stack<String> stos = new Stack<String>();
+        int liczonp = licznik;
+        boolean unary = true;
+
+        Token token;
+        token = tokens.get(liczonp);
+        while(!token.getNazwa().equals("LINENUMBER") && !token.getNazwa().equals("COMMA") && !token.getNazwa().equals("SEMICOLON") && liczonp!=tokens.size() ){
+            if (token.getNazwa().equals("NUMBER")) {
+                onp += token.getWartosc() + ",";
+                liczonp++;
+                unary = false;
+            } else if (token.getNazwa().equals("LPARE")) {
+                unary = true;
+                stos.push(token.getNazwa());
+                liczonp++;
+            } else if(token.getNazwa().equals("TEXT")) {
+                onp += token.getWartosc() + ",";
+                liczonp++;
+                unary=false;
+            } else if(unary==true && token.getNazwa().equals("-")){
+                stos.push("neg");
+                liczonp++;
+            } else if(unary==false && (token.getNazwa().equals("+") ||
+                    token.getNazwa().equals("-") ||
+                    token.getNazwa().equals("*") ||
+                    token.getNazwa().equals("/") ||
+                    token.getNazwa().equals("^") )){
+                if(token.getNazwa().equals("+") || token.getNazwa().equals("-") ){
+                    while(!stos.isEmpty() && (stos.peek().equals("*") || stos.peek().equals("/") || stos.peek().equals("^") && stos.peek().length()>1)){
+                        onp += stos.pop() + ",";
+                    }
+                    stos.push( String.valueOf(token.getNazwa()));
+                    }else if(token.getNazwa().equals("*") || token.getNazwa().equals("/")){
+                    while(!stos.isEmpty() && (stos.peek().equals("^") || stos.peek().length()>1)){
+                        onp += stos.pop() + ",";
+                    }
+                    stos.push( String.valueOf(token.getNazwa()));
+                    } else if(token.getNazwa().equals("^")){
+                    while(!stos.isEmpty() && stos.peek().length()>1){
+                        onp += stos.pop() + ",";
+                    }
+                    stos.push(String.valueOf(token.getNazwa()));
+                }
+                unary=true;
+                liczonp++;
+            }else if(token.getNazwa().equals("RPARE")) {
+                while (!stos.peek().equals("LPARE")) {
+                        onp += stos.pop() + ",";
+                    }
+                    stos.pop();
+
+                liczonp++;
+            }
+            if(liczonp!=tokens.size())token = tokens.get(liczonp);
         }
-                else {
-            System.out.println("blad");
-            try {
-                error();
-            }
-            catch (Exception e){
-                System.out.println("blad");
+
+        while (!stos.empty()) {
+            onp += stos.pop() + ",";
+        }
+        if(token.getNazwa().equals("LINENUMBER") || token.getNazwa().equals("COMMA") || token.getNazwa().equals("SEMICOLON"))liczonp--;
+        licznik=liczonp;
+
+        return onp;
+    }
+
+    private double evaluateONP(String onp) {
+        int wskaznikONP = 0;
+        String[]ONP = onp.split(",");
+        Stack<Double> wartosc = new Stack<Double>();
+
+        while (wskaznikONP<ONP.length) {
+
+            if (scanString(ONP[wskaznikONP]) == 1) {
+                wartosc.push(Double.parseDouble(ONP[wskaznikONP]));
+                wskaznikONP++;
+            } else if (scanString(ONP[wskaznikONP]) == 2) {
+                if (ONP[wskaznikONP].equals("sqrt")) {
+                    double a = wartosc.pop();
+                    wartosc.push(Math.sqrt(a));
+                    wskaznikONP++;
+                } else if (ONP[wskaznikONP].equals("neg")) {
+                    double a = -wartosc.pop();
+                    wartosc.push(a);
+                    wskaznikONP++;
+                } else if (ONP[wskaznikONP].equals("sin")) {
+                    double a = -wartosc.pop();
+                    wartosc.push(Math.sin(a));
+                    wskaznikONP++;
+                } else if (ONP[wskaznikONP].equals("cos")) {
+                    double a = -wartosc.pop();
+                    wartosc.push(Math.cos(a));
+                    wskaznikONP++;
+                } else if (ONP[wskaznikONP].equals("tg") || ONP[wskaznikONP].equals("tan")) {
+                    double a = -wartosc.pop();
+                    wartosc.push(Math.tan(a));
+                    wskaznikONP++;
+                } else if (ONP[wskaznikONP].equals("ctg") || ONP[wskaznikONP].equals("cot")) {
+                    double a = -wartosc.pop();
+                    wartosc.push(Math.cos(a) / Math.sin(a));
+                    wskaznikONP++;
+                } else if(var.containsKey(ONP[wskaznikONP])) {
+                    wartosc.push(var.get(ONP[wskaznikONP]).getDoubleValue());
+                    wskaznikONP++;
+                }
+
+            } else if (scanString(ONP[wskaznikONP]) == 3)
+
+            {
+                if (ONP[wskaznikONP].equals("+")) {
+                    double a = wartosc.pop();
+                    double b = wartosc.pop();
+                    wartosc.push(b + a);
+                    wskaznikONP++;
+                } else if (ONP[wskaznikONP].equals("*")) {
+                    double a = wartosc.pop();
+                    double b = wartosc.pop();
+                    wartosc.push(b * a);
+                    wskaznikONP++;
+                } else if (ONP[wskaznikONP].equals("-")) {
+                    double a = wartosc.pop();
+                    double b = wartosc.pop();
+                    wartosc.push(b - a);
+                    wskaznikONP++;
+                } else if (ONP[wskaznikONP].equals("/")) {
+                    double a = wartosc.pop();
+                    double b = wartosc.pop();
+                    wartosc.push(b / a);
+                    wskaznikONP++;
+                } else if (ONP[wskaznikONP].equals("^")) {
+                    double a = wartosc.pop();
+                    double b = wartosc.pop();
+                    wartosc.push(Math.pow(b, a));
+                    wskaznikONP++;
+                }
             }
         }
+        return wartosc.pop();
     }
 
-    int wyraz(){
-        int wynik =  wspolczynnik();
-
-        while (token.getNazwa().equals("*") || token.getNazwa().equals("/")){
-            Token token = tokens.get(wskaznik);
-            if (token.getNazwa().equals("*")){
-                eat("*");
-                wynik = wynik * wyraz();
-            }
-            else if (token.getNazwa().equals("/")){
-                eat("/");
-                wynik = wynik / wyraz();
-            }
-        }
-        return wynik;
+    private int scanString(String input){
+        if(Character.isDigit(input.charAt(0))){
+            return 1;
+        }else if(Character.isAlphabetic(input.charAt(0))) {
+            return 2;
+        } else return 3;
     }
 
-    int wspolczynnik(){
-        Token token = tokens.get(wskaznik);
-        if(token.getNazwa().equals("NUMBER")){
-            eat(token.getNazwa());
-            return Integer.valueOf(token.getWartosc());
-        }else if(token.getNazwa().equals("LPARE")){
-            eat(token.getNazwa());
-            int wynik = expr();
-            eat("RPARE");
-            return wynik;
-        } return 0;
-    }
-
-    int expr(){
-        int wynik = wyraz();
-        while (token.getNazwa().equals("+") || token.getNazwa().equals("-")){
-            token = tokens.get(wskaznik);
-            if (token.getNazwa().equals("+")){
-                eat("+");
-                wynik = wynik + wyraz();
-            }
-            else if (token.getNazwa().equals("-")){
-                eat("-");
-                wynik = wynik - wyraz();
-            }
-        }
-        return wynik;
-    }
-
-    /*private Token get(int offset){
-        if (position + offset >= tokens.size()){
-            return new Token("EOF","");
-        } return tokens.get(position + offset);
-    }
-
-    private Token last(int offset) {
-        return tokens.get(position - offset);
-    }
-
-    private Token consume(String name){
-        if(!match(name)) throw new Error("Zły token " + name);
-        return last(1);
-    }
-
-    private boolean match(String name){
-        if(get(0).getNazwa().equals("SYMBOL")) return false;
-        if(!get(0).getWartosc().equals(name))return false;
-        position++;
-        return true;
-    }*/
     public Hashtable<String, Variable> getVar(){
         return var;
     }
@@ -119,7 +184,7 @@ public class Parser extends Exception{
         Hashtable<Integer, Integer> etykiety = new Hashtable<Integer, Integer>();
         //variables = new ArrayList<Variables>();
         var = new Hashtable<String, Variable>();
-        int licznik=0;
+        licznik=0;
         Token token;
         while(licznik<tokens.size()){
             token=tokens.get(licznik);
@@ -132,15 +197,101 @@ public class Parser extends Exception{
                         licznik++;
                         token = tokens.get(licznik);
                         if(token.getNazwa().equals("STRING")){
-                            controller.konsolaTextArea.appendText(token.getWartosc() + "\n");
+                            controller.konsolaTextArea.appendText(token.getWartosc());
                             licznik++;
                         } else if(token.getNazwa().equals("TEXT")){
                             //System.out.println(variables.indexOf(token.getWartosc()));
                             //Variables zmienna = variables.get(variables.indexOf(token.getWartosc()));
-                            if(var.get(token.getWartosc()).isType())controller.konsolaTextArea.appendText(var.get(token.getWartosc()).getStringValue()+"\n");
-                            else controller.konsolaTextArea.appendText(String.valueOf(var.get(token.getWartosc()).getDoubleValue())+"\n");
+                            String symbolName = token.getWartosc();
+
                             licznik++;
+                            if(licznik!=tokens.size()){
+                                token = tokens.get(licznik);
+                                if(token.getNazwa().equals("+") || token.getNazwa().equals("-") || token.getNazwa().equals("*")
+                                        || token.getNazwa().equals("/") || token.getNazwa().equals("^")){
+                                    licznik--;
+                                    token = tokens.get(licznik);
+
+                                    controller.konsolaTextArea.appendText(String.valueOf(evaluateONP(wyrazenie())));
+                                } else {
+                                    licznik--;
+                                    token = tokens.get(licznik);
+                                    if(var.get(token.getWartosc()).isType())controller.konsolaTextArea.appendText(var.get(token.getWartosc()).getStringValue());
+                                    else controller.konsolaTextArea.appendText(String.valueOf(var.get(token.getWartosc()).getDoubleValue()));
+                                }
+                            } else {
+                                licznik--;
+                                token = tokens.get(licznik);
+                                if(var.get(token.getWartosc()).isType())controller.konsolaTextArea.appendText(var.get(token.getWartosc()).getStringValue());
+                                else controller.konsolaTextArea.appendText(String.valueOf(var.get(token.getWartosc()).getDoubleValue()));
+                            }
+                            licznik++;
+                            //if(var.get(token.getWartosc()).isType())controller.konsolaTextArea.appendText(var.get(token.getWartosc()).getStringValue());
+                            //else controller.konsolaTextArea.appendText(String.valueOf(var.get(token.getWartosc()).getDoubleValue()));
+                            //licznik++;
+                        } else if (token.getNazwa().equals("NUMBER")){
+                            licznik++;
+                            if(licznik!=tokens.size()){
+                                token = tokens.get(licznik);
+                                if(token.getNazwa().equals("+") || token.getNazwa().equals("-") || token.getNazwa().equals("*")
+                                        || token.getNazwa().equals("/") || token.getNazwa().equals("^")){
+                                    licznik--;
+                                    token = tokens.get(licznik);
+
+                                    controller.konsolaTextArea.appendText(String.valueOf(evaluateONP(wyrazenie())));
+                                } else {
+                                    licznik--;
+                                    token = tokens.get(licznik);
+                                    controller.konsolaTextArea.appendText(token.getWartosc());
+                                }
+                            } else {
+                                licznik--;
+                                token = tokens.get(licznik);
+                                controller.konsolaTextArea.appendText(token.getWartosc());
+                            }
+                            licznik++;
+                            //controller.konsolaTextArea.appendText(token.getWartosc());
+                            //licznik++;
                         }
+                        boolean morePrint = true;
+                            while (morePrint){
+                                token = tokens.get(licznik);
+                                if(token.getNazwa().equals("COMMA")){
+                                    licznik++;
+                                    token = tokens.get(licznik);
+                                    if(token.getNazwa().equals("STRING")){
+                                        controller.konsolaTextArea.appendText("\t" + token.getWartosc());
+                                        licznik++;
+                                    } else if(token.getNazwa().equals("TEXT")){
+                                        //System.out.println(variables.indexOf(token.getWartosc()));
+                                        //Variables zmienna = variables.get(variables.indexOf(token.getWartosc()));
+                                        if(var.get(token.getWartosc()).isType())controller.konsolaTextArea.appendText("\t" + var.get(token.getWartosc()).getStringValue());
+                                        else controller.konsolaTextArea.appendText(String.valueOf("\t" + var.get(token.getWartosc()).getDoubleValue()));
+                                        licznik++;
+                                    } else if (token.getNazwa().equals("NUMBER")){
+                                        controller.konsolaTextArea.appendText("\t" + token.getWartosc());
+                                        licznik++;
+                                    }
+                                }else if(token.getNazwa().equals("SEMICOLON")){
+                                    licznik++;
+                                    token = tokens.get(licznik);
+                                    if(token.getNazwa().equals("STRING")){
+                                        controller.konsolaTextArea.appendText(token.getWartosc());
+                                        licznik++;
+                                    } else if(token.getNazwa().equals("TEXT")){
+                                        //System.out.println(variables.indexOf(token.getWartosc()));
+                                        //Variables zmienna = variables.get(variables.indexOf(token.getWartosc()));
+                                        if(var.get(token.getWartosc()).isType())controller.konsolaTextArea.appendText(var.get(token.getWartosc()).getStringValue());
+                                        else controller.konsolaTextArea.appendText(String.valueOf(var.get(token.getWartosc()).getDoubleValue()));
+                                        licznik++;
+                                    } else if (token.getNazwa().equals("NUMBER")){
+                                        controller.konsolaTextArea.appendText(token.getWartosc());
+                                        licznik++;
+                                    }
+                                } else morePrint = false;
+                            }
+
+                        controller.konsolaTextArea.appendText("\n");
 
                     } else if (token.getWartosc().equals("GOTO")) {
                         licznik++;
@@ -152,6 +303,7 @@ public class Parser extends Exception{
                         if (token.getNazwa().equals("STRING")) {
                             controller.konsolaTextArea.appendText(token.getWartosc());
                             licznik++;
+                            token = tokens.get(licznik);
                         }
                         controller.konsolaTextArea.appendText("?");
 
@@ -163,9 +315,22 @@ public class Parser extends Exception{
                         while (newValue.equals("") || newValue.charAt(newValue.length() - 1) != '\n') {
                             newValue = controller.konsolaTextArea.getText().replace(oldValue, "");
                         }
+                        newValue.replace("\n", "");
                         controller.konsolaTextArea.setEditable(false);
-                        System.out.println(newValue);
+                        try {
+                            double value = Double.parseDouble(newValue);
+                            var.put(token.getWartosc(), new Variable(value));
+                        } catch (NumberFormatException e) {
+                            var.put(token.getWartosc(), new Variable(newValue));
+
+                        }
+                        printVar();
                         licznik++;
+                        controller.konsolaTextArea.appendText("\n");
+
+                    } else if(token.getWartosc().equals("INT")){
+                        licznik++;
+                        System.out.println(evaluateONP(wyrazenie()));
                     }
                 } else if(token.getNazwa().equals("TEXT")){
                     String symbolName = token.getWartosc();
@@ -175,11 +340,62 @@ public class Parser extends Exception{
                         licznik++;
                         token=tokens.get(licznik);
                         if(token.getNazwa().equals("NUMBER")){
-                            var.put(symbolName, new Variable(Double.parseDouble(token.getWartosc())));
-                            printVar();
+                            //var.put(symbolName, new Variable(Double.parseDouble(token.getWartosc())));
+                            //printVar();
 
                             licznik++;
-                        } else if(token.getNazwa().equals("STRING")){
+                            if(licznik!=tokens.size()){
+                                token = tokens.get(licznik);
+                                if(token.getNazwa().equals("+") || token.getNazwa().equals("-") || token.getNazwa().equals("*")
+                                        || token.getNazwa().equals("/") || token.getNazwa().equals("^")){
+                                    licznik--;
+                                    token = tokens.get(licznik);
+
+                                    var.put(symbolName, new Variable(evaluateONP(wyrazenie())));
+                                    printVar();
+                                } else {
+                                    licznik--;
+                                    token = tokens.get(licznik);
+                                    var.put(symbolName, new Variable(Double.parseDouble(token.getWartosc())));
+                                    printVar();
+                                }
+                            } else {
+                                licznik--;
+                                token = tokens.get(licznik);
+                                var.put(symbolName, new Variable(Double.parseDouble(token.getWartosc())));
+                                printVar();
+                            }
+                            licznik++;
+
+                        } else if(token.getNazwa().equals("TEXT")){
+                            //var.put(symbolName, new Variable(Double.parseDouble(token.getWartosc())));
+                            //printVar();
+
+                            licznik++;
+                            if(licznik!=tokens.size()){
+                                token = tokens.get(licznik);
+                                if(token.getNazwa().equals("+") || token.getNazwa().equals("-") || token.getNazwa().equals("*")
+                                        || token.getNazwa().equals("/") || token.getNazwa().equals("^")){
+                                    licznik--;
+                                    token = tokens.get(licznik);
+
+                                    var.put(symbolName, new Variable(evaluateONP(wyrazenie())));
+                                    printVar();
+                                } else {
+                                    licznik--;
+                                    token = tokens.get(licznik);
+                                    var.put(symbolName, new Variable(var.get(token.getWartosc()).getDoubleValue()));
+                                    printVar();
+                                }
+                            } else {
+                                licznik--;
+                                token = tokens.get(licznik);
+                                var.put(symbolName, new Variable(var.get(token.getWartosc()).getDoubleValue()));
+                                printVar();
+                            }
+                            licznik++;
+
+                        }else if(token.getNazwa().equals("STRING")){
                             //variables.add(new Variables(symbolName, token.getWartosc()));
                             var.put(symbolName, new Variable(token.getWartosc()));
                             printVar();

@@ -1,7 +1,11 @@
 package interpreter;
 
+import javafx.animation.AnimationTimer;
+import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+import javafx.concurrent.Service;
+import javafx.concurrent.Task;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
@@ -11,6 +15,8 @@ import javafx.stage.FileChooser;
 
 import java.io.*;
 import java.util.Optional;
+import java.util.concurrent.CountDownLatch;
+
 
 public class Controller {
     @FXML
@@ -128,14 +134,43 @@ public class Controller {
             //konsolaTextArea.appendText(String.valueOf(parser.expr())+"\n");
             //parser.parse();
 
-            Thread t = new Thread(new Runnable() {
-                @Override
-                public void run() {
-                    parser.parse();
-                }
-            });
+            //Thread t = new Thread(new Runnable() {
+            //    @Override
+            //    public void run() {
+             //       parser.parse();
+             //   }
+            //});
 
-            t.start();
+            //t.start();
+
+
+            Service<Void> service = new Service<Void>() {
+                @Override
+                protected Task<Void> createTask() {
+                    return new Task<Void>() {
+                        @Override
+                        protected Void call() throws Exception {
+                            parser.parse();
+                            final CountDownLatch latch = new CountDownLatch(1);
+                            Platform.runLater(new Runnable() {
+                                @Override
+                                public void run() {
+                                    try{
+
+                                    }finally{
+                                        latch.countDown();
+                                    }
+                                }
+                            });
+                            latch.await();
+                            //Keep with the background work
+                            return null;
+                        }
+                    };
+                }
+            };
+            service.start();
+            //parser.parse();
         } catch(NieznanySymbol e){
             System.out.println("Błąd analizy leksykalnej");
             konsolaTextArea.appendText("Nierozpoznane znaki w kodzie" + "\n");
