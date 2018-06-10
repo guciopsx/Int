@@ -1,5 +1,10 @@
 package interpreter;
 
+import javafx.application.Platform;
+import javafx.concurrent.Task;
+import javafx.concurrent.WorkerStateEvent;
+import javafx.event.EventHandler;
+
 import java.awt.desktop.SystemSleepEvent;
 import java.util.ArrayList;
 import java.util.Hashtable;
@@ -10,10 +15,12 @@ public class Parser extends Exception{
     private Controller controller;
     private ArrayList<Token> tokens;
     private Hashtable<String, Variable> var;
+    private Input input;
 
-    Parser(ArrayList<Token> tokens, Controller controller){
+    Parser(ArrayList<Token> tokens, Controller controller, Input input){
         this.controller = controller;
         this.tokens = tokens;
+        this.input = input;
     }
 
     void error() throws SyntaxError{
@@ -176,10 +183,25 @@ public class Parser extends Exception{
     }
 
     private void printVar(){
-        controller.varTextArea.clear();
+        Platform.runLater(new Runnable() {
+            @Override public void run() {
+                controller.varTextArea.clear();
+            }
+        });
+
         for(String name: var.keySet()){
-            if(var.get(name).isType()) controller.varTextArea.appendText("Zmienna: " + name.toString() + " Wartość: " + var.get(name).getStringValue()+"\n");
-            else controller.varTextArea.appendText("Zmienna: " + name.toString() + " Wartość: " + var.get(name).getDoubleValue()+"\n");
+            if(var.get(name).isType())
+                Platform.runLater(new Runnable() {
+                    @Override public void run() {
+                        controller.varTextArea.appendText("Zmienna: " + name.toString() + " Wartość: " + var.get(name).getStringValue()+"\n");
+                    }
+                });
+
+            else Platform.runLater(new Runnable() {
+                @Override public void run() {
+                    controller.varTextArea.appendText("Zmienna: " + name.toString() + " Wartość: " + var.get(name).getDoubleValue()+"\n");
+                }
+            });
         }
     }
 
@@ -251,7 +273,7 @@ public class Parser extends Exception{
                         licznik++;
                         token = tokens.get(licznik);
                         if(token.getNazwa().equals("STRING")){
-                            controller.konsolaTextArea.appendText(token.getWartosc());
+                            ui(token.getWartosc());
                             licznik++;
                         } else if(token.getNazwa().equals("TEXT")){
                             //System.out.println(variables.indexOf(token.getWartosc()));
@@ -265,22 +287,25 @@ public class Parser extends Exception{
                                     licznik--;
                                     token = tokens.get(licznik);
 
-                                    controller.konsolaTextArea.appendText(String.valueOf(evaluateONP(wyrazenie())));
+                                    //ui(String.valueOf(evaluateONP(wyrazenie())));
+                                    ui(String.valueOf(evaluateONP(wyrazenie())));
                                 } else {
                                     licznik--;
                                     token = tokens.get(licznik);
-                                    if(var.get(token.getWartosc()).isType())controller.konsolaTextArea.appendText(var.get(token.getWartosc()).getStringValue());
-                                    else controller.konsolaTextArea.appendText(String.valueOf(var.get(token.getWartosc()).getDoubleValue()));
+                                    //if(var.get(token.getWartosc()).isType())ui(var.get(token.getWartosc()).getStringValue());
+                                    //else ui(String.valueOf(var.get(token.getWartosc()).getDoubleValue()));
+                                    if(var.get(token.getWartosc()).isType())ui(var.get(token.getWartosc()).getStringValue());
+                                    else ui(String.valueOf(var.get(token.getWartosc()).getDoubleValue()));
                                 }
                             } else {
                                 licznik--;
                                 token = tokens.get(licznik);
-                                if(var.get(token.getWartosc()).isType())controller.konsolaTextArea.appendText(var.get(token.getWartosc()).getStringValue());
-                                else controller.konsolaTextArea.appendText(String.valueOf(var.get(token.getWartosc()).getDoubleValue()));
+                                if(var.get(token.getWartosc()).isType())ui(var.get(token.getWartosc()).getStringValue());
+                                else ui(String.valueOf(var.get(token.getWartosc()).getDoubleValue()));
                             }
                             licznik++;
-                            //if(var.get(token.getWartosc()).isType())controller.konsolaTextArea.appendText(var.get(token.getWartosc()).getStringValue());
-                            //else controller.konsolaTextArea.appendText(String.valueOf(var.get(token.getWartosc()).getDoubleValue()));
+                            //if(var.get(token.getWartosc()).isType())ui(var.get(token.getWartosc()).getStringValue());
+                            //else ui(String.valueOf(var.get(token.getWartosc()).getDoubleValue()));
                             //licznik++;
                         } else if (token.getNazwa().equals("NUMBER")){
                             licznik++;
@@ -291,22 +316,22 @@ public class Parser extends Exception{
                                     licznik--;
                                     token = tokens.get(licznik);
 
-                                    controller.konsolaTextArea.appendText(String.valueOf(evaluateONP(wyrazenie())));
+                                    ui(String.valueOf(evaluateONP(wyrazenie())));
                                 } else {
                                     licznik--;
                                     token = tokens.get(licznik);
-                                    controller.konsolaTextArea.appendText(token.getWartosc());
+                                    ui(token.getWartosc());
                                 }
                             } else {
                                 licznik--;
                                 token = tokens.get(licznik);
-                                controller.konsolaTextArea.appendText(token.getWartosc());
+                                ui(token.getWartosc());
                             }
                             licznik++;
-                            //controller.konsolaTextArea.appendText(token.getWartosc());
+                            //ui(token.getWartosc());
                             //licznik++;
                         } else if (token.getNazwa().equals("LPARE")){
-                            controller.konsolaTextArea.appendText(String.valueOf(evaluateONP(wyrazenie())));
+                            ui(String.valueOf(evaluateONP(wyrazenie())));
                             licznik++;
                         }
                         boolean morePrint = true;
@@ -316,7 +341,7 @@ public class Parser extends Exception{
                                     licznik++;
                                     token = tokens.get(licznik);
                                     if(token.getNazwa().equals("STRING")){
-                                        controller.konsolaTextArea.appendText(token.getWartosc());
+                                        ui("\t"+token.getWartosc());
                                         licznik++;
                                     } else if(token.getNazwa().equals("TEXT")){
                                         //System.out.println(variables.indexOf(token.getWartosc()));
@@ -329,22 +354,22 @@ public class Parser extends Exception{
                                                 licznik--;
                                                 token = tokens.get(licznik);
 
-                                                controller.konsolaTextArea.appendText("\t" + String.valueOf(evaluateONP(wyrazenie())));
+                                                ui("\t" + String.valueOf(evaluateONP(wyrazenie())));
                                             } else {
                                                 licznik--;
                                                 token = tokens.get(licznik);
-                                                if(var.get(token.getWartosc()).isType())controller.konsolaTextArea.appendText("\t" + var.get(token.getWartosc()).getStringValue());
-                                                else controller.konsolaTextArea.appendText(String.valueOf("\t" + var.get(token.getWartosc()).getDoubleValue()));
+                                                if(var.get(token.getWartosc()).isType())ui("\t" + var.get(token.getWartosc()).getStringValue());
+                                                else ui(String.valueOf("\t" + var.get(token.getWartosc()).getDoubleValue()));
                                             }
                                         } else {
                                             licznik--;
                                             token = tokens.get(licznik);
-                                            if(var.get(token.getWartosc()).isType())controller.konsolaTextArea.appendText("\t" + var.get(token.getWartosc()).getStringValue());
-                                            else controller.konsolaTextArea.appendText(String.valueOf("\t" + var.get(token.getWartosc()).getDoubleValue()));
+                                            if(var.get(token.getWartosc()).isType())ui("\t" + var.get(token.getWartosc()).getStringValue());
+                                            else ui(String.valueOf("\t" + var.get(token.getWartosc()).getDoubleValue()));
                                         }
                                         licznik++;
-                                        //if(var.get(token.getWartosc()).isType())controller.konsolaTextArea.appendText(var.get(token.getWartosc()).getStringValue());
-                                        //else controller.konsolaTextArea.appendText(String.valueOf(var.get(token.getWartosc()).getDoubleValue()));
+                                        //if(var.get(token.getWartosc()).isType())ui(var.get(token.getWartosc()).getStringValue());
+                                        //else ui(String.valueOf(var.get(token.getWartosc()).getDoubleValue()));
                                         //licznik++;
                                     } else if (token.getNazwa().equals("NUMBER")){
                                         licznik++;
@@ -355,29 +380,29 @@ public class Parser extends Exception{
                                                 licznik--;
                                                 token = tokens.get(licznik);
 
-                                                controller.konsolaTextArea.appendText("\t" + String.valueOf(evaluateONP(wyrazenie())));
+                                                ui("\t" + String.valueOf(evaluateONP(wyrazenie())));
                                             } else {
                                                 licznik--;
                                                 token = tokens.get(licznik);
-                                                controller.konsolaTextArea.appendText("\t" + token.getWartosc());
+                                                ui("\t" + token.getWartosc());
                                             }
                                         } else {
                                             licznik--;
                                             token = tokens.get(licznik);
-                                            controller.konsolaTextArea.appendText("\t" + token.getWartosc());
+                                            ui("\t" + token.getWartosc());
                                         }
                                         licznik++;
-                                        //controller.konsolaTextArea.appendText(token.getWartosc());
+                                        //ui(token.getWartosc());
                                         //licznik++;
                                     } else if (token.getNazwa().equals("LPARE")){
-                                        controller.konsolaTextArea.appendText("\t" + String.valueOf(evaluateONP(wyrazenie())));
+                                        ui("\t" + String.valueOf(evaluateONP(wyrazenie())));
                                         licznik++;
                                     }
                                 }else if(token.getNazwa().equals("SEMICOLON")){
                                     licznik++;
                                     token = tokens.get(licznik);
                                     if(token.getNazwa().equals("STRING")){
-                                        controller.konsolaTextArea.appendText(token.getWartosc());
+                                        ui(token.getWartosc());
                                         licznik++;
                                     } else if(token.getNazwa().equals("TEXT")){
                                         //System.out.println(variables.indexOf(token.getWartosc()));
@@ -391,22 +416,22 @@ public class Parser extends Exception{
                                                 licznik--;
                                                 token = tokens.get(licznik);
 
-                                                controller.konsolaTextArea.appendText(String.valueOf(evaluateONP(wyrazenie())));
+                                                ui(String.valueOf(evaluateONP(wyrazenie())));
                                             } else {
                                                 licznik--;
                                                 token = tokens.get(licznik);
-                                                if(var.get(token.getWartosc()).isType())controller.konsolaTextArea.appendText(var.get(token.getWartosc()).getStringValue());
-                                                else controller.konsolaTextArea.appendText(String.valueOf(var.get(token.getWartosc()).getDoubleValue()));
+                                                if(var.get(token.getWartosc()).isType())ui(var.get(token.getWartosc()).getStringValue());
+                                                else ui(String.valueOf(var.get(token.getWartosc()).getDoubleValue()));
                                             }
                                         } else {
                                             licznik--;
                                             token = tokens.get(licznik);
-                                            if(var.get(token.getWartosc()).isType())controller.konsolaTextArea.appendText(var.get(token.getWartosc()).getStringValue());
-                                            else controller.konsolaTextArea.appendText(String.valueOf(var.get(token.getWartosc()).getDoubleValue()));
+                                            if(var.get(token.getWartosc()).isType())ui(var.get(token.getWartosc()).getStringValue());
+                                            else ui(String.valueOf(var.get(token.getWartosc()).getDoubleValue()));
                                         }
                                         licznik++;
-                                        //if(var.get(token.getWartosc()).isType())controller.konsolaTextArea.appendText(var.get(token.getWartosc()).getStringValue());
-                                        //else controller.konsolaTextArea.appendText(String.valueOf(var.get(token.getWartosc()).getDoubleValue()));
+                                        //if(var.get(token.getWartosc()).isType())ui(var.get(token.getWartosc()).getStringValue());
+                                        //else ui(String.valueOf(var.get(token.getWartosc()).getDoubleValue()));
                                         //licznik++;
                                     } else if (token.getNazwa().equals("NUMBER")){
                                         licznik++;
@@ -417,28 +442,28 @@ public class Parser extends Exception{
                                                 licznik--;
                                                 token = tokens.get(licznik);
 
-                                                controller.konsolaTextArea.appendText(String.valueOf(evaluateONP(wyrazenie())));
+                                                ui(String.valueOf(evaluateONP(wyrazenie())));
                                             } else {
                                                 licznik--;
                                                 token = tokens.get(licznik);
-                                                controller.konsolaTextArea.appendText(token.getWartosc());
+                                                ui(token.getWartosc());
                                             }
                                         } else {
                                             licznik--;
                                             token = tokens.get(licznik);
-                                            controller.konsolaTextArea.appendText(token.getWartosc());
+                                            ui(token.getWartosc());
                                         }
                                         licznik++;
-                                        //controller.konsolaTextArea.appendText(token.getWartosc());
+                                        //ui(token.getWartosc());
                                         //licznik++;
                                     } else if (token.getNazwa().equals("LPARE")){
-                                        controller.konsolaTextArea.appendText(String.valueOf(evaluateONP(wyrazenie())));
+                                        ui(String.valueOf(evaluateONP(wyrazenie())));
                                         licznik++;
                                     }
                                 } else morePrint = false;
                             }
 
-                        controller.konsolaTextArea.appendText("\n");
+                        ui("\n");
 
                     } else if (token.getWartosc().equals("GOTO")) {
                         licznik++;
@@ -670,7 +695,7 @@ public class Parser extends Exception{
                                         licznik++;
                                         token = tokens.get(licznik);
                                         if(token.getNazwa().equals("STRING")){
-                                            controller.konsolaTextArea.appendText(token.getWartosc());
+                                            ui(token.getWartosc());
                                             licznik++;
                                         } else if(token.getNazwa().equals("TEXT")){
                                             //System.out.println(variables.indexOf(token.getWartosc()));
@@ -684,22 +709,22 @@ public class Parser extends Exception{
                                                     licznik--;
                                                     token = tokens.get(licznik);
 
-                                                    controller.konsolaTextArea.appendText(String.valueOf(evaluateONP(wyrazenie())));
+                                                    ui(String.valueOf(evaluateONP(wyrazenie())));
                                                 } else {
                                                     licznik--;
                                                     token = tokens.get(licznik);
-                                                    if(var.get(token.getWartosc()).isType())controller.konsolaTextArea.appendText(var.get(token.getWartosc()).getStringValue());
-                                                    else controller.konsolaTextArea.appendText(String.valueOf(var.get(token.getWartosc()).getDoubleValue()));
+                                                    if(var.get(token.getWartosc()).isType())ui(var.get(token.getWartosc()).getStringValue());
+                                                    else ui(String.valueOf(var.get(token.getWartosc()).getDoubleValue()));
                                                 }
                                             } else {
                                                 licznik--;
                                                 token = tokens.get(licznik);
-                                                if(var.get(token.getWartosc()).isType())controller.konsolaTextArea.appendText(var.get(token.getWartosc()).getStringValue());
-                                                else controller.konsolaTextArea.appendText(String.valueOf(var.get(token.getWartosc()).getDoubleValue()));
+                                                if(var.get(token.getWartosc()).isType())ui(var.get(token.getWartosc()).getStringValue());
+                                                else ui(String.valueOf(var.get(token.getWartosc()).getDoubleValue()));
                                             }
                                             licznik++;
-                                            //if(var.get(token.getWartosc()).isType())controller.konsolaTextArea.appendText(var.get(token.getWartosc()).getStringValue());
-                                            //else controller.konsolaTextArea.appendText(String.valueOf(var.get(token.getWartosc()).getDoubleValue()));
+                                            //if(var.get(token.getWartosc()).isType())ui(var.get(token.getWartosc()).getStringValue());
+                                            //else ui(String.valueOf(var.get(token.getWartosc()).getDoubleValue()));
                                             //licznik++;
                                         } else if (token.getNazwa().equals("NUMBER")){
                                             licznik++;
@@ -710,22 +735,22 @@ public class Parser extends Exception{
                                                     licznik--;
                                                     token = tokens.get(licznik);
 
-                                                    controller.konsolaTextArea.appendText(String.valueOf(evaluateONP(wyrazenie())));
+                                                    ui(String.valueOf(evaluateONP(wyrazenie())));
                                                 } else {
                                                     licznik--;
                                                     token = tokens.get(licznik);
-                                                    controller.konsolaTextArea.appendText(token.getWartosc());
+                                                    ui(token.getWartosc());
                                                 }
                                             } else {
                                                 licznik--;
                                                 token = tokens.get(licznik);
-                                                controller.konsolaTextArea.appendText(token.getWartosc());
+                                                ui(token.getWartosc());
                                             }
                                             licznik++;
-                                            //controller.konsolaTextArea.appendText(token.getWartosc());
+                                            //ui(token.getWartosc());
                                             //licznik++;
                                         } else if (token.getNazwa().equals("LPARE")) {
-                                            controller.konsolaTextArea.appendText(String.valueOf(evaluateONP(wyrazenie())));
+                                            ui(String.valueOf(evaluateONP(wyrazenie())));
                                             licznik++;
                                         }
 
@@ -736,7 +761,7 @@ public class Parser extends Exception{
                                                 licznik++;
                                                 token = tokens.get(licznik);
                                                 if(token.getNazwa().equals("STRING")){
-                                                    controller.konsolaTextArea.appendText(token.getWartosc());
+                                                    ui("\t"+token.getWartosc());
                                                     licznik++;
                                                 } else if(token.getNazwa().equals("TEXT")){
                                                     //System.out.println(variables.indexOf(token.getWartosc()));
@@ -749,22 +774,22 @@ public class Parser extends Exception{
                                                             licznik--;
                                                             token = tokens.get(licznik);
 
-                                                            controller.konsolaTextArea.appendText("\t" + String.valueOf(evaluateONP(wyrazenie())));
+                                                            ui("\t" + String.valueOf(evaluateONP(wyrazenie())));
                                                         } else {
                                                             licznik--;
                                                             token = tokens.get(licznik);
-                                                            if(var.get(token.getWartosc()).isType())controller.konsolaTextArea.appendText("\t" + var.get(token.getWartosc()).getStringValue());
-                                                            else controller.konsolaTextArea.appendText(String.valueOf("\t" + var.get(token.getWartosc()).getDoubleValue()));
+                                                            if(var.get(token.getWartosc()).isType())ui("\t" + var.get(token.getWartosc()).getStringValue());
+                                                            else ui(String.valueOf("\t" + var.get(token.getWartosc()).getDoubleValue()));
                                                         }
                                                     } else {
                                                         licznik--;
                                                         token = tokens.get(licznik);
-                                                        if(var.get(token.getWartosc()).isType())controller.konsolaTextArea.appendText("\t" + var.get(token.getWartosc()).getStringValue());
-                                                        else controller.konsolaTextArea.appendText(String.valueOf("\t" + var.get(token.getWartosc()).getDoubleValue()));
+                                                        if(var.get(token.getWartosc()).isType())ui("\t" + var.get(token.getWartosc()).getStringValue());
+                                                        else ui(String.valueOf("\t" + var.get(token.getWartosc()).getDoubleValue()));
                                                     }
                                                     licznik++;
-                                                    //if(var.get(token.getWartosc()).isType())controller.konsolaTextArea.appendText(var.get(token.getWartosc()).getStringValue());
-                                                    //else controller.konsolaTextArea.appendText(String.valueOf(var.get(token.getWartosc()).getDoubleValue()));
+                                                    //if(var.get(token.getWartosc()).isType())ui(var.get(token.getWartosc()).getStringValue());
+                                                    //else ui(String.valueOf(var.get(token.getWartosc()).getDoubleValue()));
                                                     //licznik++;
                                                 } else if (token.getNazwa().equals("NUMBER")){
                                                     licznik++;
@@ -775,29 +800,29 @@ public class Parser extends Exception{
                                                             licznik--;
                                                             token = tokens.get(licznik);
 
-                                                            controller.konsolaTextArea.appendText("\t" + String.valueOf(evaluateONP(wyrazenie())));
+                                                            ui("\t" + String.valueOf(evaluateONP(wyrazenie())));
                                                         } else {
                                                             licznik--;
                                                             token = tokens.get(licznik);
-                                                            controller.konsolaTextArea.appendText("\t" + token.getWartosc());
+                                                            ui("\t" + token.getWartosc());
                                                         }
                                                     } else {
                                                         licznik--;
                                                         token = tokens.get(licznik);
-                                                        controller.konsolaTextArea.appendText("\t" + token.getWartosc());
+                                                        ui("\t" + token.getWartosc());
                                                     }
                                                     licznik++;
-                                                    //controller.konsolaTextArea.appendText(token.getWartosc());
+                                                    //ui(token.getWartosc());
                                                     //licznik++;
                                                 }else if (token.getNazwa().equals("LPARE")) {
-                                                    controller.konsolaTextArea.appendText("\t" + String.valueOf(evaluateONP(wyrazenie())));
+                                                    ui("\t" + String.valueOf(evaluateONP(wyrazenie())));
                                                     licznik++;
                                                 }
                                             }else if(token.getNazwa().equals("SEMICOLON")){
                                                 licznik++;
                                                 token = tokens.get(licznik);
                                                 if(token.getNazwa().equals("STRING")){
-                                                    controller.konsolaTextArea.appendText(token.getWartosc());
+                                                    ui(token.getWartosc());
                                                     licznik++;
                                                 } else if(token.getNazwa().equals("TEXT")){
                                                     //System.out.println(variables.indexOf(token.getWartosc()));
@@ -811,22 +836,22 @@ public class Parser extends Exception{
                                                             licznik--;
                                                             token = tokens.get(licznik);
 
-                                                            controller.konsolaTextArea.appendText(String.valueOf(evaluateONP(wyrazenie())));
+                                                            ui(String.valueOf(evaluateONP(wyrazenie())));
                                                         } else {
                                                             licznik--;
                                                             token = tokens.get(licznik);
-                                                            if(var.get(token.getWartosc()).isType())controller.konsolaTextArea.appendText(var.get(token.getWartosc()).getStringValue());
-                                                            else controller.konsolaTextArea.appendText(String.valueOf(var.get(token.getWartosc()).getDoubleValue()));
+                                                            if(var.get(token.getWartosc()).isType())ui(var.get(token.getWartosc()).getStringValue());
+                                                            else ui(String.valueOf(var.get(token.getWartosc()).getDoubleValue()));
                                                         }
                                                     } else {
                                                         licznik--;
                                                         token = tokens.get(licznik);
-                                                        if(var.get(token.getWartosc()).isType())controller.konsolaTextArea.appendText(var.get(token.getWartosc()).getStringValue());
-                                                        else controller.konsolaTextArea.appendText(String.valueOf(var.get(token.getWartosc()).getDoubleValue()));
+                                                        if(var.get(token.getWartosc()).isType())ui(var.get(token.getWartosc()).getStringValue());
+                                                        else ui(String.valueOf(var.get(token.getWartosc()).getDoubleValue()));
                                                     }
                                                     licznik++;
-                                                    //if(var.get(token.getWartosc()).isType())controller.konsolaTextArea.appendText(var.get(token.getWartosc()).getStringValue());
-                                                    //else controller.konsolaTextArea.appendText(String.valueOf(var.get(token.getWartosc()).getDoubleValue()));
+                                                    //if(var.get(token.getWartosc()).isType())ui(var.get(token.getWartosc()).getStringValue());
+                                                    //else ui(String.valueOf(var.get(token.getWartosc()).getDoubleValue()));
                                                     //licznik++;
                                                 } else if (token.getNazwa().equals("NUMBER")){
                                                     licznik++;
@@ -837,35 +862,35 @@ public class Parser extends Exception{
                                                             licznik--;
                                                             token = tokens.get(licznik);
 
-                                                            controller.konsolaTextArea.appendText(String.valueOf(evaluateONP(wyrazenie())));
+                                                            ui(String.valueOf(evaluateONP(wyrazenie())));
                                                         } else {
                                                             licznik--;
                                                             token = tokens.get(licznik);
-                                                            controller.konsolaTextArea.appendText(token.getWartosc());
+                                                            ui(token.getWartosc());
                                                         }
                                                     } else {
                                                         licznik--;
                                                         token = tokens.get(licznik);
-                                                        controller.konsolaTextArea.appendText(token.getWartosc());
+                                                        ui(token.getWartosc());
                                                     }
                                                     licznik++;
-                                                    //controller.konsolaTextArea.appendText(token.getWartosc());
+                                                    //ui(token.getWartosc());
                                                     //licznik++;
                                                 } else if (token.getNazwa().equals("LPARE")) {
-                                                    controller.konsolaTextArea.appendText(String.valueOf(evaluateONP(wyrazenie())));
+                                                    ui(String.valueOf(evaluateONP(wyrazenie())));
                                                     licznik++;
                                                 }
                                             } else morePrint = false;
                                         }
 
-                                        controller.konsolaTextArea.appendText("\n");
+                                        ui("\n");
 
                                     } else if (token.getWartosc().equals("INPUT")) {
                                         int licznikInput = 1;
                                         licznik++;
                                         token = tokens.get(licznik);
                                         if (token.getNazwa().equals("STRING")) {
-                                            controller.konsolaTextArea.appendText(token.getWartosc());
+                                            ui(token.getWartosc());
                                             licznik++;
                                             token = tokens.get(licznik);
                                             if(token.getNazwa().equals("SEMICOLON")){
@@ -873,28 +898,29 @@ public class Parser extends Exception{
                                                 token = tokens.get(licznik);
                                             }
                                         }
-                                        for(int i=0;i<licznikInput;i++) controller.konsolaTextArea.appendText("?");
+                                        for(int i=0;i<licznikInput;i++) ui("?");
 
-                                        controller.konsolaTextArea.setEditable(true);
-                                        String oldValue, newValue;
-                                        oldValue = controller.konsolaTextArea.getText();
-                                        newValue = controller.konsolaTextArea.getText().replace(oldValue, "");
+                                        uiFocus();
 
-                                        while (newValue.equals("") || newValue.charAt(newValue.length() - 1) != '\n') {
-                                            newValue = controller.konsolaTextArea.getText().replace(oldValue, "");
+                                        input.clear();
+                                        uiE(true);
+
+                                        while (!input.getText().contains("\n")) {
                                         }
-                                        newValue.replace("\n", "");
-                                        controller.konsolaTextArea.setEditable(false);
+
+                                        input.rem();
+                                        uiE(false);
+
                                         try {
-                                            double value = Double.parseDouble(newValue);
+                                            double value = Double.parseDouble(input.getText());
                                             var.put(token.getWartosc(), new Variable(value));
                                         } catch (NumberFormatException e) {
-                                            var.put(token.getWartosc(), new Variable(newValue.replace("\n", "")));
+                                            var.put(token.getWartosc(), new Variable(input.getText().replace("\n", "")));
 
                                         }
                                         printVar();
                                         licznik++;
-                                        //controller.konsolaTextArea.appendText("\n");
+                                        //ui("\n");
 
                                         boolean moreInput = true;
                                         while (moreInput){
@@ -904,23 +930,23 @@ public class Parser extends Exception{
                                                 licznik++;
                                                 token = tokens.get(licznik);
 
-                                                for(int i=0;i<licznikInput;i++) controller.konsolaTextArea.appendText("?");
+                                                for(int i=0;i<licznikInput;i++) ui("?");
 
-                                                controller.konsolaTextArea.setEditable(true);
+                                                uiFocus();
 
-                                                oldValue = controller.konsolaTextArea.getText();
-                                                newValue = controller.konsolaTextArea.getText().replace(oldValue, "");
+                                                input.clear();
+                                                uiE(true);
 
-                                                while (newValue.equals("") || newValue.charAt(newValue.length() - 1) != '\n') {
-                                                    newValue = controller.konsolaTextArea.getText().replace(oldValue, "");
+                                                while (!input.getText().contains("\n")) {
                                                 }
-                                                newValue.replace("\n", "");
-                                                controller.konsolaTextArea.setEditable(false);
+
+                                                input.rem();
+                                                uiE(false);
                                                 try {
-                                                    double value = Double.parseDouble(newValue);
+                                                    double value = Double.parseDouble(input.getText());
                                                     var.put(token.getWartosc(), new Variable(value));
                                                 } catch (NumberFormatException e) {
-                                                    var.put(token.getWartosc(), new Variable(newValue.replace("\n", "")));
+                                                    var.put(token.getWartosc(), new Variable(input.getText().replace("\n", "")));
 
                                                 }
                                                 printVar();
@@ -948,7 +974,7 @@ public class Parser extends Exception{
                         licznik++;
                         token = tokens.get(licznik);
                         if (token.getNazwa().equals("STRING")) {
-                            controller.konsolaTextArea.appendText(token.getWartosc());
+                            ui(token.getWartosc());
                             licznik++;
                             token = tokens.get(licznik);
                             if(token.getNazwa().equals("SEMICOLON")){
@@ -956,28 +982,29 @@ public class Parser extends Exception{
                                 token = tokens.get(licznik);
                             }
                         }
-                        for(int i=0;i<licznikInput;i++) controller.konsolaTextArea.appendText("?");
+                        for(int i=0;i<licznikInput;i++) ui("?");
 
-                        controller.konsolaTextArea.setEditable(true);
-                        String oldValue, newValue;
-                        oldValue = controller.konsolaTextArea.getText();
-                        newValue = controller.konsolaTextArea.getText().replace(oldValue, "");
+                        uiFocus();
 
-                        while (newValue.equals("") || newValue.charAt(newValue.length() - 1) != '\n') {
-                            newValue = controller.konsolaTextArea.getText().replace(oldValue, "");
+                        input.clear();
+                        uiE(true);
+
+                        while (!input.getText().contains("\n")) {
                         }
-                        newValue.replace("\n", "");
-                        controller.konsolaTextArea.setEditable(false);
+
+                        input.rem();
+                        uiE(false);
+
                         try {
-                            double value = Double.parseDouble(newValue);
+                            double value = Double.parseDouble(input.getText());
                             var.put(token.getWartosc(), new Variable(value));
                         } catch (NumberFormatException e) {
-                            var.put(token.getWartosc(), new Variable(newValue.replace("\n", "")));
+                            var.put(token.getWartosc(), new Variable(input.getText().replace("\n", "")));
 
                         }
                         printVar();
                         licznik++;
-                        //controller.konsolaTextArea.appendText("\n");
+                        //ui("\n");
 
                         boolean moreInput = true;
                         while (moreInput){
@@ -987,23 +1014,23 @@ public class Parser extends Exception{
                                 licznik++;
                                 token = tokens.get(licznik);
 
-                                for(int i=0;i<licznikInput;i++) controller.konsolaTextArea.appendText("?");
+                                for(int i=0;i<licznikInput;i++) ui("?");
 
-                                controller.konsolaTextArea.setEditable(true);
+                                uiFocus();
 
-                                oldValue = controller.konsolaTextArea.getText();
-                                newValue = controller.konsolaTextArea.getText().replace(oldValue, "");
+                                input.clear();
+                                uiE(true);
 
-                                while (newValue.equals("") || newValue.charAt(newValue.length() - 1) != '\n') {
-                                    newValue = controller.konsolaTextArea.getText().replace(oldValue, "");
+                                while (!input.getText().contains("\n")) {
                                 }
-                                newValue.replace("\n", "");
-                                controller.konsolaTextArea.setEditable(false);
+
+                                input.rem();
+                                uiE(false);
                                 try {
-                                    double value = Double.parseDouble(newValue);
+                                    double value = Double.parseDouble(input.getText());
                                     var.put(token.getWartosc(), new Variable(value));
                                 } catch (NumberFormatException e) {
-                                    var.put(token.getWartosc(), new Variable(newValue.replace("\n", "")));
+                                    var.put(token.getWartosc(), new Variable(input.getText().replace("\n", "")));
 
                                 }
                                 printVar();
@@ -1134,20 +1161,19 @@ public class Parser extends Exception{
                             else licznik++;
                         }
 
-                    } else if(token.getWartosc().equals("INT")){
-                        licznik++;
-                        System.out.println(evaluateONP(wyrazenie()));
                     } else if(token.getWartosc().equals("STOP")) {
-                        controller.konsolaTextArea.setEditable(true);
-                        String oldValue, newValue;
-                        oldValue = controller.konsolaTextArea.getText();
-                        newValue = controller.konsolaTextArea.getText().replace(oldValue, "");
+                        ui("Aby kontunować wciśnij enter");
+                        uiFocus();
+                        input.clear();
+                        uiE(true);
 
-                        while (newValue.equals("") || newValue.charAt(newValue.length() - 1) != '\n') {
-                            newValue = controller.konsolaTextArea.getText().replace(oldValue, "");
+                        while (!input.getText().contains("\n")) {
                         }
-                        newValue.replace("\n", "");
-                        controller.konsolaTextArea.setEditable(false);
+
+                        input.rem();
+                        uiE(false);
+                        licznik++;
+
                     } else if(token.getWartosc().equals("LET")){
                         licznik++;
                         token = tokens.get(licznik);
@@ -1219,6 +1245,27 @@ public class Parser extends Exception{
                                     var.put(symbolName, new Variable(token.getWartosc()));
                                     printVar();
                                     licznik++;
+                                }else if(token.getNazwa().equals("LPARE")){
+                                    var.put(symbolName, new Variable(evaluateONP(wyrazenie())));
+                                    printVar();
+                                    licznik++;
+                                }else if(token.getNazwa().equals("NUMBER")){
+                                    licznik++;
+                                    token = tokens.get(licznik);
+                                    if(token.getNazwa().equals("+") || token.getNazwa().equals("-") || token.getNazwa().equals("*")
+                                            || token.getNazwa().equals("/") || token.getNazwa().equals("^")){
+                                        licznik--;
+                                        token = tokens.get(licznik);
+                                        var.put(symbolName, new Variable(evaluateONP(wyrazenie())));
+                                        printVar();
+
+                                    } else {
+                                        licznik--;
+                                        token = tokens.get(licznik);
+                                        var.put(symbolName, new Variable(Double.parseDouble(token.getWartosc())));
+                                        printVar();
+                                        licznik++;
+                                    }
                                 }
                             }
 
@@ -1292,6 +1339,27 @@ public class Parser extends Exception{
                             var.put(symbolName, new Variable(token.getWartosc()));
                             printVar();
                             licznik++;
+                        }else if(token.getNazwa().equals("LPARE")){
+                            var.put(symbolName, new Variable(evaluateONP(wyrazenie())));
+                            printVar();
+                            licznik++;
+                        }else if(token.getNazwa().equals("NUMBER")){
+                            licznik++;
+                            token = tokens.get(licznik);
+                            if(token.getNazwa().equals("+") || token.getNazwa().equals("-") || token.getNazwa().equals("*")
+                                    || token.getNazwa().equals("/") || token.getNazwa().equals("^")){
+                                licznik--;
+                                token = tokens.get(licznik);
+                                var.put(symbolName, new Variable(evaluateONP(wyrazenie())));
+                                printVar();
+
+                            } else {
+                                licznik--;
+                                token = tokens.get(licznik);
+                                var.put(symbolName, new Variable(Double.parseDouble(token.getWartosc())));
+                                printVar();
+                                licznik++;
+                            }
                         }
                     }
 
@@ -1301,5 +1369,29 @@ public class Parser extends Exception{
                 //throw new Exception("Błędna linia");
             }
         }
+    }
+
+    private void ui(String text){
+        Platform.runLater(new Runnable() {
+            @Override public void run() {
+                controller.konsolaTextArea.appendText(text);
+            }
+        });
+    }
+
+    private void uiE(Boolean edit){
+        Platform.runLater(new Runnable() {
+            @Override public void run() {
+                controller.konsolaTextArea.setEditable(edit);
+            }
+        });
+    }
+
+    private void uiFocus(){
+        Platform.runLater(new Runnable() {
+            @Override public void run() {
+                controller.konsolaTextArea.requestFocus();
+            }
+        });
     }
 }

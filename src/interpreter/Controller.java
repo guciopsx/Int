@@ -1,34 +1,31 @@
 package interpreter;
 
-import javafx.animation.AnimationTimer;
-import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
-import javafx.concurrent.Service;
 import javafx.concurrent.Task;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
+import javafx.fxml.Initializable;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.layout.BorderPane;
 import javafx.stage.FileChooser;
 
 import java.io.*;
+import java.net.URL;
 import java.util.Optional;
-import java.util.concurrent.CountDownLatch;
+import java.util.ResourceBundle;
 
-
-public class Controller {
+public class Controller implements Initializable {
     @FXML
     public Button odczytBtn, zapisBtn, runBtn, srcBtn;
     public TextArea edytorTextArea, konsolaTextArea, varTextArea;
     public BorderPane bp;
     public TableView<Token> listaTokenow;
-    public TableView varTableView;
-    public TableColumn nazwaColumn, wartoscColumn, zmiennaColumn, wartoscVarColumn;
+    public TableColumn nazwaColumn, wartoscColumn;
 
     public ObservableList<Token> lista;
-    public ObservableList varList;
+    private Input input;
 
     String source = "10 FOR B=99 TO 1 STEP -1\n" +
             "20 GOSUB 100\n" +
@@ -131,12 +128,12 @@ public class Controller {
             if(konsolaTextArea.getText().isEmpty())konsolaTextArea.appendText("Wygenerowano żetony: " + lista.size() + "\n");
             else konsolaTextArea.appendText("\nWygenerowano żetony: " + lista.size() + "\n");
 
-            Parser parser = new Parser(lexer.getTokeny(), this);
+            Parser parser = new Parser(lexer.getTokeny(), this, input);
             //konsolaTextArea.appendText(String.valueOf(parser.expr())+"\n");
             //parser.parse();
 
 
-            Service<Void> service = new Service<Void>() {
+            /*Service<Void> service = new Service<Void>() {
                 @Override
                 protected Task<Void> createTask() {
                     return new Task<Void>() {
@@ -162,7 +159,20 @@ public class Controller {
                     };
                 }
             };
-            service.start();
+            service.start();*///
+             Task<Void> workingTask = new Task<Void>() {
+                @Override
+                public Void call() {
+
+            parser.parse();
+
+                    return  null;
+
+                }
+
+            };
+
+            new Thread(workingTask).start();
 
 
 
@@ -221,6 +231,16 @@ public class Controller {
             System.err.println("Error: " + e.getMessage());
             konsolaTextArea.appendText("Błąd zapisywania pliku" + "\n");
         }
+    }
+
+    @Override
+    public void initialize(URL location, ResourceBundle resources) {
+        input= new Input("");
+        konsolaTextArea.textProperty().addListener((observable, oValue, nValue) -> {
+            if(konsolaTextArea.isEditable()) {
+                input.append(nValue.replace(oValue, ""));
+            }
+        });
     }
 
 }
